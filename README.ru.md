@@ -20,6 +20,7 @@
 | [gh-issues](./skills/gh-issues/) | Управление GitHub Issues через CLI с хранением контекста сессий |
 | [paperclip-api](./skills/paperclip-api/) | Управление компаниями AI-агентов Paperclip через CLI и REST API |
 | [readme-generator](./skills/readme-generator/) | Человеко-ориентированные README с правильной структурой |
+| [ris-draft](./skills/ris-draft/) | Одна HTML-диаграмма в стиле плоского инженерного чертежа — архитектура, потоки, spec sheets |
 
 #### Personal Corp Framework
 

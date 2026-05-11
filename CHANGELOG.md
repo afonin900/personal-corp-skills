@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **ris-draft** skill — generate one self-contained HTML page with a technical diagram in flat engineering blueprint style
+  - Strict visual rules: flat, outlined, monochrome, system fonts only, no external CDN
+  - Supports four diagram types: architecture, system flow, technical spec sheet, component map
+  - All CSS inline; opens offline in any browser
+  - Bilingual docs (README.md + README.ru.md, Russian default)
+
 ## [1.15.1] - 2026-03-29
 
 ### Fixed
