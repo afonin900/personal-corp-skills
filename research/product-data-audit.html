@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Аудит: ris-claude-code</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #f5f0e8; --paper: #faf8f4; --ink: #1a1a18; --ink-light: #4a4a45; --ink-faint: #8a8a82;
+  --rule: #d4cfc4; --vermillion: #d42b1e;
+  --forest: #1a6b3c; --forest-light: rgba(26,107,60,0.07);
+  --amber: #b5750d; --amber-light: rgba(181,117,13,0.07);
+  --vermillion-light: rgba(212,43,30,0.05);
+  --slate: #5a6a7a; --slate-light: rgba(90,106,122,0.04);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Instrument Sans',sans-serif; background:var(--cream); color:var(--ink); line-height:1.6; }
+
+/* NAV */
+nav { position:fixed; top:0; left:0; right:0; height:56px; background:var(--ink); z-index:100; display:flex; align-items:center; padding:0 24px; gap:8px; }
+nav .logo { font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; color:#fff; letter-spacing:2px; margin-right:16px; white-space:nowrap; }
+nav a { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-faint); text-decoration:none; padding:4px 8px; border-radius:3px; transition:color 0.2s, background 0.2s; white-space:nowrap; }
+nav a:hover, nav a.active { color:#fff; background:rgba(255,255,255,0.1); }
+.nav-legend { margin-left:auto; display:flex; gap:12px; align-items:center; flex-shrink:0; }
+.nav-legend span { font-family:'IBM Plex Mono',monospace; font-size:9px; display:flex; align-items:center; gap:4px; color:var(--ink-faint); }
+.nav-legend .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.dot-fact { background:var(--forest); }
+.dot-hypo { background:var(--amber); }
+.dot-unknown { background:var(--vermillion); }
+
+/* CONTAINER */
+.container { max-width:920px; margin:0 auto; padding:80px 40px 120px; }
+
+/* HERO */
+.hero { margin-bottom:48px; padding-top:24px; }
+.hero-date { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-faint); letter-spacing:1px; margin-bottom:12px; }
+.hero h1 { font-family:'Cormorant Garamond',serif; font-size:52px; font-weight:700; line-height:1.1; margin-bottom:16px; color:var(--ink); }
+.hero .subtitle { font-size:18px; color:var(--ink-light); line-height:1.5; max-width:680px; }
+
+/* METHODOLOGY */
+.methodology { background:var(--paper); border:1px solid var(--rule); padding:24px 28px; margin-bottom:40px; font-size:14px; color:var(--ink-light); line-height:1.7; }
+.methodology a { color:var(--forest); text-decoration:underline; }
+
+/* TOC */
+.toc { display:grid; grid-template-columns:repeat(4,1fr); gap:8px 16px; margin-bottom:64px; }
+.toc a { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-faint); text-decoration:none; padding:6px 0; transition:color 0.2s; }
+.toc a:hover { color:var(--ink); }
+.toc a .toc-num { color:var(--vermillion); margin-right:6px; }
+
+/* SECTIONS */
+section { margin-bottom:72px; opacity:0; transform:translateY(16px); transition:opacity 0.45s ease, transform 0.45s ease; }
+section.visible { opacity:1; transform:translateY(0); }
+.section-number { font-family:'Cormorant Garamond',serif; font-size:64px; font-weight:700; color:var(--vermillion); line-height:1; margin-bottom:4px; }
+.section-title { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:600; margin-bottom:8px; }
+.section-intro { font-size:13px; color:var(--ink-faint); margin-bottom:28px; line-height:1.6; }
+
+/* TAGGED ITEMS */
+.tagged-item { margin-bottom:24px; padding-left:16px; border-left:3px solid var(--rule); }
+.tagged-item.fact { border-color:var(--forest); }
+.tagged-item.hypo { border-color:var(--amber); }
+.tagged-item.unknown { border-color:var(--vermillion); background:var(--vermillion-light); padding:16px; }
+.tag-stamp { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; letter-spacing:1px; margin-bottom:6px; }
+.tag-stamp.fact { color:var(--forest); }
+.tag-stamp.hypo { color:var(--amber); }
+.tag-stamp.unknown { color:var(--vermillion); }
+.fact-claim { font-size:15px; font-weight:500; margin-bottom:8px; line-height:1.5; }
+.fact-metrics { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+.fact-metrics .pill { font-family:'IBM Plex Mono',monospace; font-size:12px; background:rgba(26,26,24,0.04); padding:3px 8px; border-radius:3px; }
+.pill .key { font-weight:600; }
+.fact-source { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-faint); }
+
+/* TABLES */
+.table-wrapper { overflow-x:auto; margin-bottom:24px; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+thead { background:var(--ink); color:#fff; }
+th { font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:500; padding:10px 12px; text-align:left; letter-spacing:0.5px; }
+td { padding:10px 12px; border-bottom:1px solid var(--rule); vertical-align:top; }
+tr:hover td { background:var(--forest-light); }
+
+/* BOTTLENECK CARDS */
+.bottleneck-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; }
+.bottleneck-card { background:var(--paper); border:1px solid var(--rule); padding:20px; position:relative; overflow:hidden; transition:box-shadow 0.2s; }
+.bottleneck-card:hover { box-shadow:4px 4px 0 var(--rule); }
+.bottleneck-card.crit { border-left:4px solid var(--vermillion); }
+.bottleneck-card.med { border-left:4px solid var(--amber); }
+.bottleneck-num { font-family:'Cormorant Garamond',serif; font-size:72px; font-weight:700; color:rgba(26,26,24,0.04); position:absolute; top:-10px; right:8px; line-height:1; }
+.bottleneck-title { font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; margin-bottom:8px; }
+.bottleneck-body { font-size:13px; color:var(--ink-light); }
+
+/* CONTOUR CARDS */
+.contour-card { background:var(--paper); border:1px solid var(--rule); padding:24px; margin-bottom:16px; }
+.contour-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.contour-name { font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; }
+.contour-priority { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:3px 8px; border-radius:3px; }
+.prio-crit { background:var(--vermillion); color:#fff; }
+.prio-high { background:var(--amber); color:#fff; }
+.prio-med { background:var(--ink-faint); color:#fff; }
+.contour-why, .contour-now { font-size:13px; color:var(--ink-light); margin-bottom:8px; }
+.contour-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:12px; }
+.contour-col h4 { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-faint); margin-bottom:6px; letter-spacing:0.5px; }
+.contour-col ul { list-style:none; font-size:13px; }
+.contour-col li { padding:4px 0; padding-left:12px; position:relative; }
+.contour-col li::before { content:""; position:absolute; left:0; top:10px; width:4px; height:4px; background:var(--ink-faint); }
+.risk-bar { margin-top:12px; font-size:12px; color:var(--vermillion); font-family:'IBM Plex Mono',monospace; }
+
+/* PRIORITY TIMELINE */
+.timeline { position:relative; padding-left:32px; margin-bottom:32px; }
+.timeline::before { content:""; position:absolute; left:8px; top:0; bottom:0; width:2px; background:var(--rule); }
+.timeline-group { margin-bottom:28px; }
+.timeline-label { font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; letter-spacing:1px; margin-bottom:12px; position:relative; }
+.timeline-label::before { content:""; position:absolute; left:-28px; top:3px; width:12px; height:12px; }
+.timeline-label.now::before { background:var(--forest); }
+.timeline-label.next::before { background:var(--amber); }
+.timeline-label.later::before { background:var(--ink-faint); }
+.timeline-item { font-size:14px; margin-bottom:8px; padding-left:4px; }
+
+/* ONE HOUR BOX */
+.one-hour-box { border:2px solid var(--vermillion); padding:28px 24px 20px; position:relative; margin-top:32px; }
+.one-hour-box::before { content:"ЕСЛИ БЫ БЫЛ 1 ЧАС"; position:absolute; top:-11px; left:16px; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; letter-spacing:1px; color:var(--vermillion); background:var(--cream); padding:0 8px; }
+.one-hour-box ol { padding-left:20px; font-size:14px; }
+.one-hour-box li { margin-bottom:8px; }
+
+/* UNKNOWN ITEMS */
+.unknown-item { border-left:3px solid var(--vermillion); background:var(--vermillion-light); padding:16px; margin-bottom:12px; display:flex; gap:12px; align-items:flex-start; }
+.unknown-mark { font-family:'Cormorant Garamond',serif; font-size:24px; color:var(--vermillion); line-height:1; flex-shrink:0; }
+.unknown-text { font-size:14px; }
+
+/* QUESTION CARDS */
+.question-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.question-card { background:var(--paper); border:1px solid var(--rule); padding:16px; display:flex; gap:12px; transition:box-shadow 0.2s; }
+.question-card:hover { box-shadow:4px 4px 0 var(--rule); }
+.question-num { font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:600; color:var(--vermillion); flex-shrink:0; }
+.question-text { font-size:13px; }
+
+/* SVG DIAGRAM */
+.diagram-wrap { margin-bottom:32px; overflow-x:auto; }
+.diagram-wrap svg { display:block; max-width:100%; }
+
+/* ARTIFACT MISSING */
+.artifact-missing { background:var(--paper); border:1px solid var(--rule); border-left:4px solid var(--vermillion); padding:16px 20px; margin-bottom:12px; }
+.artifact-missing h4 { font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; margin-bottom:8px; }
+.artifact-missing .af-row { font-size:12px; margin-bottom:4px; color:var(--ink-light); }
+.artifact-missing .af-label { font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--ink); }
+
+.artifact-present { background:var(--forest-light); border:1px solid var(--rule); border-left:4px solid var(--forest); padding:16px 20px; margin-bottom:12px; }
+.artifact-present h4 { font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; color:var(--forest); margin-bottom:4px; }
+.artifact-present p { font-size:12px; color:var(--ink-light); }
+
+h3 { font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; margin:28px 0 16px; letter-spacing:0.5px; }
+
+/* RESPONSIVE */
+@media(max-width:768px) {
+  nav { padding:0 12px; overflow-x:auto; }
+  .nav-legend { display:none; }
+  .container { padding:70px 20px 80px; }
+  .hero h1 { font-size:32px; }
+  .toc { grid-template-columns:repeat(2,1fr); }
+  .bottleneck-grid, .contour-grid, .question-grid { grid-template-columns:1fr; }
+  .section-number { font-size:48px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">АУДИТ</span>
+  <a href="#s0">00</a><a href="#s1">01</a><a href="#s2">02</a><a href="#s3">03</a>
+  <a href="#s4">04</a><a href="#s5">05</a><a href="#s6">06</a><a href="#s7">07</a>
+  <a href="#s8">08</a><a href="#s9">09</a><a href="#s10">10</a><a href="#s11">11</a>
+  <div class="nav-legend">
+    <span><span class="dot dot-fact"></span>ФАКТ</span>
+    <span><span class="dot dot-hypo"></span>ГИПОТЕЗА</span>
+    <span><span class="dot dot-unknown"></span>НЕИЗВЕСТНО</span>
+  </div>
+</nav>
+
+<div class="container">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-date">29 МАРТА 2026</div>
+  <h1>Продуктовый взрыв без конвейера обратной связи</h1>
+  <div class="subtitle">11 скиллов, 134 звезды, 292 уникальных посетителя за 14 дней — но ни одного GitHub Issue, ни одной метрики использования после установки. Репозиторий растёт как портфолио автора, а не как продукт с пользователями.</div>
+</div>
+
+<!-- METHODOLOGY -->
+<div class="methodology">
+  Агент прочитал 38 файлов проекта (CLAUDE.md, README, CHANGELOG, 11 SKILL.md, references, configs), получил данные из GitHub API (stars, forks, traffic, clones, referrers, releases), проанализировал git-историю (35 коммитов). Проверил 18 операционных артефактов. Каждый вывод протегирован: ФАКТ / ГИПОТЕЗА / НЕИЗВЕСТНО — с источником. <br><br>Скилл: <a href="https://github.com/serejaris/ris-claude-code/tree/main/skills/product-data-audit">Product & Data Audit</a>.
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <a href="#s0"><span class="toc-num">00</span> Диаграмма экосистемы</a>
+  <a href="#s1"><span class="toc-num">01</span> Короткое резюме</a>
+  <a href="#s2"><span class="toc-num">02</span> Что делает на самом деле</a>
+  <a href="#s3"><span class="toc-num">03</span> Карта решений</a>
+  <a href="#s4"><span class="toc-num">04</span> Данные и системы</a>
+  <a href="#s5"><span class="toc-num">05</span> Что уже есть</a>
+  <a href="#s6"><span class="toc-num">06</span> Узкие места</a>
+  <a href="#s7"><span class="toc-num">07</span> Контуры и артефакты</a>
+  <a href="#s8"><span class="toc-num">08</span> Приоритеты</a>
+  <a href="#s9"><span class="toc-num">09</span> Неизвестное</a>
+  <a href="#s10"><span class="toc-num">10</span> Вопросы</a>
+  <a href="#s11"><span class="toc-num">11</span> Источники</a>
+</div>
+
+<!-- SECTION 0 -->
+<section id="s0">
+  <div class="section-number">00</div>
+  <div class="section-title">Диаграмма экосистемы</div>
+  <div class="section-intro">Визуальная карта проекта — что из чего состоит, как связано, где разрывы.</div>
+
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 980 580" xmlns="http://www.w3.org/2000/svg" style="background:#faf8f4; border:1px solid #d4cfc4;">
+      <!-- Layer labels -->
+      <text x="16" y="30" font-family="IBM Plex Mono" font-size="10" fill="#1a6b3c" font-weight="600" letter-spacing="1">01 ЯДРО ЦЕННОСТИ</text>
+      <text x="16" y="162" font-family="IBM Plex Mono" font-size="10" fill="#b5750d" font-weight="600" letter-spacing="1">02 РОСТ И РАСПРОСТРАНЕНИЕ</text>
+      <text x="16" y="290" font-family="IBM Plex Mono" font-size="10" fill="#5a6a7a" font-weight="600" letter-spacing="1">03 ПРИВЛЕЧЕНИЕ И ДОВЕРИЕ</text>
+      <text x="16" y="408" font-family="IBM Plex Mono" font-size="10" fill="#d42b1e" font-weight="600" letter-spacing="1">04 ОПЕРАЦИОННЫЙ КОНТУР</text>
+
+      <!-- Layer backgrounds -->
+      <rect x="12" y="38" width="956" height="118" rx="4" fill="rgba(26,107,60,0.03)" stroke="none"/>
+      <rect x="12" y="170" width="956" height="112" rx="4" fill="rgba(181,117,13,0.02)" stroke="none"/>
+      <rect x="12" y="298" width="956" height="102" rx="4" fill="rgba(90,106,122,0.02)" stroke="none"/>
+      <rect x="12" y="416" width="956" height="100" rx="4" fill="rgba(212,43,30,0.02)" stroke="none"/>
+
+      <!-- Layer 1: Core Value -->
+      <rect x="40" y="52" width="200" height="90" rx="3" fill="#fff" stroke="#1a6b3c" stroke-width="2"/>
+      <text x="56" y="74" font-family="Instrument Sans" font-size="14" fill="#1a1a18" font-weight="600">Personal Corp Framework</text>
+      <text x="56" y="92" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">4 скилла, замкнутый цикл</text>
+      <text x="56" y="106" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">init → routing → plan → retro</text>
+      <text x="56" y="126" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[CHANGELOG, README]</text>
+
+      <rect x="270" y="52" width="180" height="90" rx="3" fill="#fff" stroke="#1a6b3c" stroke-width="2"/>
+      <text x="286" y="74" font-family="Instrument Sans" font-size="14" fill="#1a1a18" font-weight="600">Utility Skills</text>
+      <text x="286" y="92" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">7 скиллов</text>
+      <text x="286" y="106" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">audit, analytics, issues...</text>
+      <text x="286" y="126" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[skills/*/SKILL.md]</text>
+
+      <rect x="480" y="52" width="170" height="90" rx="3" fill="#fff" stroke="#1a6b3c" stroke-width="2"/>
+      <text x="496" y="74" font-family="Instrument Sans" font-size="14" fill="#1a1a18" font-weight="600">Statusline</text>
+      <text x="496" y="92" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">OAuth rate limits, cost</text>
+      <text x="496" y="106" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">bash, macOS Keychain</text>
+      <text x="496" y="126" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[statusline/]</text>
+
+      <rect x="680" y="52" width="170" height="90" rx="3" fill="#fff" stroke="#1a6b3c" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="696" y="74" font-family="Instrument Sans" font-size="14" fill="#1a1a18" font-weight="600">Plugin Marketplace</text>
+      <text x="696" y="92" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">plugin.json + marketplace</text>
+      <text x="696" y="106" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">0 downloads [число не найдено]</text>
+      <text x="696" y="126" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[.claude-plugin/]</text>
+
+      <!-- Layer 2: Growth -->
+      <rect x="40" y="182" width="190" height="85" rx="3" fill="#fff" stroke="#b5750d" stroke-width="1.5"/>
+      <text x="56" y="204" font-family="Instrument Sans" font-size="13" fill="#1a1a18" font-weight="600">GitHub Stars & Forks</text>
+      <text x="56" y="222" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">134 stars, 13 forks</text>
+      <text x="56" y="236" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">11 watchers</text>
+      <text x="56" y="254" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[GitHub API, 29.03.2026]</text>
+
+      <rect x="260" y="182" width="200" height="85" rx="3" fill="#fff" stroke="#b5750d" stroke-width="1.5"/>
+      <text x="276" y="204" font-family="Instrument Sans" font-size="13" fill="#1a1a18" font-weight="600">Клоны (установки)</text>
+      <text x="276" y="222" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">604 clone / 201 unique (14d)</text>
+      <text x="276" y="236" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">пик: 73 clone (23 Mar)</text>
+      <text x="276" y="254" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[GitHub Traffic API]</text>
+
+      <rect x="490" y="182" width="200" height="85" rx="3" fill="#fff" stroke="#b5750d" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="506" y="204" font-family="Instrument Sans" font-size="13" fill="#1a1a18" font-weight="600">Билингвальная документация</text>
+      <text x="506" y="222" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">README.md + README.ru.md</text>
+      <text x="506" y="236" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">10/11 скиллов = 2 README</text>
+      <text x="506" y="254" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[skills/*/README*]</text>
+
+      <rect x="720" y="182" width="200" height="85" rx="3" fill="#fff" stroke="#b5750d" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="736" y="204" font-family="Instrument Sans" font-size="13" fill="#1a1a18" font-weight="600">CONTRIBUTING.md</text>
+      <text x="736" y="222" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">conventions, PR template</text>
+      <text x="736" y="236" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">0 external PRs</text>
+      <text x="736" y="254" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[CONTRIBUTING.md]</text>
+
+      <!-- Layer 3: Acquisition & Trust -->
+      <rect x="40" y="310" width="180" height="78" rx="3" fill="#fff" stroke="#d4cfc4" stroke-width="1"/>
+      <text x="56" y="332" font-family="Instrument Sans" font-size="13" fill="#1a1a18" font-weight="600">YouTube</text>
+      <text x="56" y="350" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">315 переходов / 62 uniq</text>
+      <text x="56" y="364" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">= #1 источник трафика</text>
+      <text x="56" y="378" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[Referrers API, 14d]</text>
+
+      <rect x="250" y="310" width="180" height="78" rx="3" fill="#fff" stroke="#d4cfc4" stroke-width="1"/>
+      <text x="266" y="332" font-family="Instrument Sans" font-size="13" fill="#1a1a18" font-weight="600">GitHub (organic)</text>
+      <text x="266" y="350" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">304 переходов / 67 uniq</text>
+      <text x="266" y="364" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">explore, search, recs</text>
+      <text x="266" y="378" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[Referrers API, 14d]</text>
+
+      <rect x="460" y="310" width="180" height="78" rx="3" fill="#fff" stroke="#d4cfc4" stroke-width="1"/>
+      <text x="476" y="332" font-family="Instrument Sans" font-size="13" fill="#1a1a18" font-weight="600">sereja.tech</text>
+      <text x="476" y="350" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">83 переходов / 15 uniq</text>
+      <text x="476" y="364" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">личный блог</text>
+      <text x="476" y="378" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[Referrers API, 14d]</text>
+
+      <rect x="670" y="310" width="160" height="78" rx="3" fill="#fff" stroke="#d4cfc4" stroke-width="1" stroke-dasharray="6,3"/>
+      <text x="686" y="332" font-family="Instrument Sans" font-size="13" fill="#1a1a18" font-weight="600">SEO (Google + Yandex)</text>
+      <text x="686" y="350" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">18 переходов / 14 uniq</text>
+      <text x="686" y="364" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">зарождающийся</text>
+      <text x="686" y="378" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[Referrers API, 14d]</text>
+
+      <!-- Layer 4: Operations -->
+      <rect x="40" y="428" width="200" height="78" rx="3" fill="#fff" stroke="#d42b1e" stroke-width="1"/>
+      <text x="56" y="450" font-family="Instrument Sans" font-size="13" fill="#1a1a18" font-weight="600">Git + Releases</text>
+      <text x="56" y="468" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">15 релизов, semver, CHANGELOG</text>
+      <text x="56" y="482" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">conventional commits</text>
+      <text x="56" y="496" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[git tags, CHANGELOG.md]</text>
+
+      <rect x="270" y="428" width="180" height="78" rx="3" fill="#fff" stroke="#d42b1e" stroke-width="1"/>
+      <text x="286" y="450" font-family="Instrument Sans" font-size="13" fill="#1a1a18" font-weight="600">CLAUDE.md (config)</text>
+      <text x="286" y="468" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">rules, structure, versioning</text>
+      <text x="286" y="482" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">48 строк</text>
+      <text x="286" y="496" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[CLAUDE.md]</text>
+
+      <rect x="480" y="428" width="180" height="78" rx="3" fill="#fff" stroke="#d42b1e" stroke-width="1" stroke-dasharray="6,3"/>
+      <text x="496" y="450" font-family="Instrument Sans" font-size="13" fill="#1a1a18" font-weight="600">Hooks</text>
+      <text x="496" y="468" font-family="IBM Plex Mono" font-size="10" fill="#d42b1e">Coming soon</text>
+      <text x="496" y="482" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">только README-заглушка</text>
+      <text x="496" y="496" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[hooks/README.md]</text>
+
+      <rect x="690" y="428" width="180" height="78" rx="3" fill="#fff" stroke="#d42b1e" stroke-width="1" stroke-dasharray="6,3"/>
+      <text x="706" y="450" font-family="Instrument Sans" font-size="13" fill="#1a1a18" font-weight="600">Prompts + Workflows</text>
+      <text x="706" y="468" font-family="IBM Plex Mono" font-size="10" fill="#d42b1e">Coming soon</text>
+      <text x="706" y="482" font-family="IBM Plex Mono" font-size="10" fill="#4a4a45">заявлены, не начаты</text>
+      <text x="706" y="496" font-family="IBM Plex Mono" font-size="8" fill="#8a8a82">[prompts/, workflows/]</text>
+
+      <!-- GAPS block -->
+      <rect x="40" y="524" width="900" height="46" rx="3" fill="none" stroke="#d42b1e" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="56" y="542" font-family="IBM Plex Mono" font-size="11" fill="#d42b1e" font-weight="600">РАЗРЫВЫ:</text>
+      <text x="148" y="542" font-family="Instrument Sans" font-size="12" fill="#4a4a45">Нет метрик post-install использования</text>
+      <text x="148" y="558" font-family="Instrument Sans" font-size="12" fill="#4a4a45">Нет обратной связи от пользователей (0 issues, 0 PRs, 0 discussions)</text>
+      <text x="600" y="542" font-family="Instrument Sans" font-size="12" fill="#4a4a45">3 из 5 секций = заглушки (hooks, prompts, workflows)</text>
+    </svg>
+  </div>
+</section>
+
+<!-- SECTION 1 -->
+<section id="s1">
+  <div class="section-number">01</div>
+  <div class="section-title">Короткое резюме</div>
+  <div class="section-intro">Главные выводы аудита в 6 утверждениях. Если читать только это — должно быть понятно что делать дальше.</div>
+
+  <div class="tagged-item fact">
+    <div class="tag-stamp fact">ФАКТ.</div>
+    <div class="fact-claim">Репозиторий набрал 134 звезды и 13 форков за 3.5 месяца — быстрый органический рост для нишевого Claude Code инструмента.</div>
+    <div class="fact-metrics">
+      <span class="pill"><span class="key">stars</span> 134</span>
+      <span class="pill"><span class="key">forks</span> 13</span>
+      <span class="pill"><span class="key">возраст</span> 105 дней</span>
+      <span class="pill"><span class="key">views/14d</span> 1 449</span>
+    </div>
+    <div class="fact-source">[GitHub API → repo, traffic/views, 29.03.2026]</div>
+  </div>
+
+  <div class="tagged-item fact">
+    <div class="tag-stamp fact">ФАКТ.</div>
+    <div class="fact-claim">YouTube — главный источник трафика (315 переходов, 62 уникальных), опережая внутреннюю навигацию GitHub (304/67).</div>
+    <div class="fact-metrics">
+      <span class="pill"><span class="key">youtube.com</span> 315 / 62 uniq</span>
+      <span class="pill"><span class="key">github.com</span> 304 / 67 uniq</span>
+      <span class="pill"><span class="key">sereja.tech</span> 83 / 15 uniq</span>
+    </div>
+    <div class="fact-source">[GitHub API → traffic/popular/referrers, 14d window]</div>
+  </div>
+
+  <div class="tagged-item fact">
+    <div class="tag-stamp fact">ФАКТ.</div>
+    <div class="fact-claim">За последние 14 дней 201 уникальный пользователь клонировал репозиторий — это потенциальные установки.</div>
+    <div class="fact-metrics">
+      <span class="pill"><span class="key">clones</span> 604</span>
+      <span class="pill"><span class="key">uniq cloners</span> 201</span>
+    </div>
+    <div class="fact-source">[GitHub API → traffic/clones, 14d window]</div>
+  </div>
+
+  <div class="tagged-item hypo">
+    <div class="tag-stamp hypo">ГИПОТЕЗА.</div>
+    <div class="fact-claim">Ноль обратной связи (0 issues, 0 PRs, 0 discussions) — проект воспринимается как read-only портфолио, а не как живой open-source инструмент.</div>
+    <div class="fact-metrics">
+      <span class="pill"><span class="key">issues</span> 0</span>
+      <span class="pill"><span class="key">PRs</span> 0</span>
+      <span class="pill"><span class="key">discussions</span> отключены</span>
+    </div>
+    <div class="fact-source">[gh issue list --state all, gh pr list --state all]</div>
+  </div>
+
+  <div class="tagged-item hypo">
+    <div class="tag-stamp hypo">ГИПОТЕЗА.</div>
+    <div class="fact-claim">3 заявленных секции ("Coming soon": hooks, prompts, workflows) создают ожидания, которые не оправдываются уже 3+ месяца — подрывая доверие к roadmap.</div>
+    <div class="fact-metrics">
+      <span class="pill"><span class="key">заглушки</span> 3 из 5 секций</span>
+      <span class="pill"><span class="key">возраст заглушек</span> с 15.12.2025</span>
+    </div>
+    <div class="fact-source">[hooks/README.md, prompts/, workflows/]</div>
+  </div>
+
+  <div class="tagged-item unknown">
+    <div class="tag-stamp unknown">НЕИЗВЕСТНО.</div>
+    <div class="fact-claim">Сколько людей реально используют скиллы после клонирования/установки — данных нет. 201 клон ≠ 201 активный пользователь.</div>
+    <div class="fact-metrics">
+      <span class="pill"><span class="key">post-install</span> [число не найдено]</span>
+    </div>
+    <div class="fact-source">[нет системы отслеживания использования]</div>
+  </div>
+</section>
+
+<!-- SECTION 2 -->
+<section id="s2">
+  <div class="section-number">02</div>
+  <div class="section-title">Что проект делает на самом деле</div>
+  <div class="section-intro">Две версии проекта — как он работает сейчас и чем пытается стать. Помогает увидеть разрыв между реальностью и амбицией.</div>
+
+  <div class="tagged-item fact">
+    <div class="tag-stamp fact">ФАКТ.</div>
+    <div class="fact-claim"><strong>Версия 1 (текущая):</strong> Персональная библиотека markdown-скиллов для Claude Code, которую автор использует ежедневно и выкладывает в open-source как часть личного бренда вайбкодера.</div>
+    <div class="fact-metrics">
+      <span class="pill"><span class="key">скиллы</span> 11</span>
+      <span class="pill"><span class="key">SKILL.md</span> 2 186 строк суммарно</span>
+      <span class="pill"><span class="key">релизы</span> 15</span>
+    </div>
+    <div class="fact-source">[skills/*/SKILL.md, CHANGELOG.md, git tags]</div>
+  </div>
+
+  <div class="tagged-item hypo">
+    <div class="tag-stamp hypo">ГИПОТЕЗА.</div>
+    <div class="fact-claim"><strong>Версия 2 (амбиция):</strong> Открытая платформа AI-скиллов для Claude Code Marketplace — устанавливается в один клик, используется сообществом, генерирует конвейер лидов для vibecoding.phd.</div>
+    <div class="fact-metrics">
+      <span class="pill"><span class="key">marketplace</span> plugin.json есть</span>
+      <span class="pill"><span class="key">install-flow</span> описан</span>
+      <span class="pill"><span class="key">contributions</span> 0</span>
+    </div>
+    <div class="fact-source">[README.md:62-65, .claude-plugin/, CONTRIBUTING.md]</div>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>Компонент</th><th>Тип</th><th>Зрелость</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Personal Corp Framework (4 скилла)</td><td>Операционная система для соло-бизнеса</td><td>Продакшн</td></tr>
+        <tr><td>Utility Skills (7 скиллов)</td><td>Автономные инструменты</td><td>Продакшн</td></tr>
+        <tr><td>Statusline</td><td>Мониторинг лимитов Claude Code</td><td>Продакшн</td></tr>
+        <tr><td>Plugin config</td><td>Маркетплейс-интеграция</td><td>Заявлена, эффект неясен</td></tr>
+        <tr><td>Hooks</td><td>Автоматизация хуков</td><td>Заглушка (Coming soon)</td></tr>
+        <tr><td>Prompts</td><td>Библиотека промптов</td><td>Заглушка (Coming soon)</td></tr>
+        <tr><td>Workflows</td><td>Мульти-шаговые автоматизации</td><td>Заглушка (Coming soon)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 3 -->
+<section id="s3">
+  <div class="section-number">03</div>
+  <div class="section-title">Карта ключевых решений</div>
+  <div class="section-intro">Какие решения принимаются регулярно, на каких данных, и где можно заменить ощущение на цифру.</div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>Решение</th><th>Кто</th><th>Частота</th><th>Данные</th><th>Критерий</th><th>Боль</th><th>AI-потенциал</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Какой скилл создавать следующим</td>
+          <td>Автор</td>
+          <td>1-2/мес</td>
+          <td>Личные потребности</td>
+          <td>Полезно лично → выложить</td>
+          <td>Нет данных об использовании</td>
+          <td>Анализ запросов в issues/discussions</td>
+        </tr>
+        <tr>
+          <td>Удалять/оставлять скилл</td>
+          <td>Автор</td>
+          <td>Раз в месяц</td>
+          <td>Ощущение ценности</td>
+          <td>"Low value, not reusable"</td>
+          <td>Нет объективных метрик</td>
+          <td>Трекинг использования</td>
+        </tr>
+        <tr>
+          <td>MINOR vs PATCH релиз</td>
+          <td>Автор</td>
+          <td>Каждый коммит</td>
+          <td>CLAUDE.md rules</td>
+          <td>Новый скилл=MINOR, фикс=PATCH</td>
+          <td>Нет боли, процесс чёткий</td>
+          <td>Уже автоматизирован через CLAUDE.md</td>
+        </tr>
+        <tr>
+          <td>Обновлять README или нет</td>
+          <td>Автор/агент</td>
+          <td>Каждый релиз</td>
+          <td>CLAUDE.md: "only when skills list changes"</td>
+          <td>Изменился список скиллов</td>
+          <td>Два README (en/ru) = двойная работа</td>
+          <td>Уже агент обновляет</td>
+        </tr>
+        <tr>
+          <td>Куда направить трафик с YouTube</td>
+          <td>Автор</td>
+          <td>Каждое видео</td>
+          <td>Referrer stats</td>
+          <td>Переходы → clones</td>
+          <td>Нет конверсионной воронки</td>
+          <td>Отслеживание source → install → use</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 4 -->
+<section id="s4">
+  <div class="section-number">04</div>
+  <div class="section-title">Карта данных и систем</div>
+  <div class="section-intro">Инвентаризация всех систем с данными — что хранят, насколько им можно верить, где слепые зоны.</div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>Система</th><th>Что хранит</th><th>Кто использует</th><th>Качество</th><th>Ограничения</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>CHANGELOG.md</td>
+          <td>Все изменения, 15 версий</td>
+          <td>Автор, пользователи</td>
+          <td>Высокое</td>
+          <td>Ссылки compare неполные (нет v1.12-v1.15)</td>
+        </tr>
+        <tr>
+          <td>Git tags</td>
+          <td>15 семантических тегов</td>
+          <td>Автор, CI</td>
+          <td>Высокое</td>
+          <td>Нет signed tags</td>
+        </tr>
+        <tr>
+          <td>GitHub Traffic API</td>
+          <td>Views, clones, referrers (14d)</td>
+          <td>Автор</td>
+          <td>Среднее</td>
+          <td>Только 14 дней, нет истории</td>
+        </tr>
+        <tr>
+          <td>GitHub Releases</td>
+          <td>15 релизов, 0 downloads</td>
+          <td>Пользователи</td>
+          <td>N/A</td>
+          <td>Нет бинарных артефактов → downloads бессмысленны</td>
+        </tr>
+        <tr>
+          <td>README.md + README.ru.md</td>
+          <td>Описание, навигация, install</td>
+          <td>Все посетители</td>
+          <td>Высокое</td>
+          <td>Двойная работа при каждом обновлении</td>
+        </tr>
+        <tr>
+          <td>CLAUDE.md</td>
+          <td>Правила, структура, versioning</td>
+          <td>AI-агент</td>
+          <td>Высокое</td>
+          <td>Нет границ запрещённых действий</td>
+        </tr>
+        <tr>
+          <td>.claude-plugin/</td>
+          <td>Plugin metadata</td>
+          <td>Claude Code Marketplace</td>
+          <td>Неясно</td>
+          <td>Нет данных по установкам через marketplace</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 5 -->
+<section id="s5">
+  <div class="section-number">05</div>
+  <div class="section-title">Что уже есть, но называется по-другому</div>
+  <div class="section-intro">Многие системы зрелее, чем кажутся. Здесь — профессиональные названия того, что уже работает.</div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>Внутреннее название</th><th>Профессиональный термин</th><th>Почему важно</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Personal Corp Framework</td>
+          <td>AI-native операционная система для соло-предпринимателя</td>
+          <td>Уникальное позиционирование: GitHub = бизнес-ОС. Ни один конкурент так не формулирует</td>
+        </tr>
+        <tr>
+          <td>CLAUDE.md + Release Checklist</td>
+          <td>Machine-readable governance policy</td>
+          <td>Агент следует процессу без ручного контроля — это зрелая DevOps практика</td>
+        </tr>
+        <tr>
+          <td>Bilingual READMEs</td>
+          <td>Internationalization (i18n) на уровне документации</td>
+          <td>Расширяет аудиторию: русскоязычный YouTube + англоязычный GitHub</td>
+        </tr>
+        <tr>
+          <td>Conventional commits + semver tags</td>
+          <td>Automated release pipeline</td>
+          <td>Машиночитаемая история: можно генерировать changelog, триггерить CI</td>
+        </tr>
+        <tr>
+          <td>SKILL.md файлы с YAML frontmatter</td>
+          <td>Declarative agent capability schema</td>
+          <td>Формат, на котором может вырасти marketplace-экосистема</td>
+        </tr>
+        <tr>
+          <td>7 удалённых скиллов (v1.13)</td>
+          <td>Product pruning / scope management</td>
+          <td>Дисциплина удаления — редкость в open-source, показывает зрелость</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- SECTION 6 -->
+<section id="s6">
+  <div class="section-number">06</div>
+  <div class="section-title">Узкие места</div>
+  <div class="section-intro">Конкретные точки, где теряются возможности или данные. Каждая — с числом и источником.</div>
+
+  <div class="bottleneck-grid">
+
+    <div class="bottleneck-card crit">
+      <div class="bottleneck-num">1</div>
+      <div class="bottleneck-title">Нулевая обратная связь</div>
+      <div class="bottleneck-body">
+        <div class="tag-stamp fact" style="margin-bottom:4px">ФАКТ.</div>
+        0 issues, 0 PRs, 0 discussions за 105 дней жизни проекта при 134 звёздах и 201 уникальном клонере. Конверсия star→feedback = 0%. Нет канала для запросов, баг-репортов, feature requests.
+        <div class="fact-source" style="margin-top:6px">[gh issue list, gh pr list, GitHub API]</div>
+      </div>
+    </div>
+
+    <div class="bottleneck-card crit">
+      <div class="bottleneck-num">2</div>
+      <div class="bottleneck-title">Слепота после установки</div>
+      <div class="bottleneck-body">
+        <div class="tag-stamp unknown" style="margin-bottom:4px">НЕИЗВЕСТНО.</div>
+        201 уникальных клонов за 14 дней. Сколько из них установили хотя бы 1 скилл? Сколько используют ежедневно? Данных нет. Решение о создании/удалении скиллов принимается вслепую.
+        <div class="fact-source" style="margin-top:6px">[нет телеметрии, нет опросов]</div>
+      </div>
+    </div>
+
+    <div class="bottleneck-card med">
+      <div class="bottleneck-num">3</div>
+      <div class="bottleneck-title">3 пустых секции обещают и не доставляют</div>
+      <div class="bottleneck-body">
+        <div class="tag-stamp fact" style="margin-bottom:4px">ФАКТ.</div>
+        hooks/, prompts/, workflows/ заявлены 15.12.2025 — "Coming soon" уже 104 дня. README ссылается на них. Для нового посетителя это сигнал заброшенности.
+        <div class="fact-source" style="margin-top:6px">[hooks/README.md, ls prompts/, ls workflows/]</div>
+      </div>
+    </div>
+
+    <div class="bottleneck-card med">
+      <div class="bottleneck-num">4</div>
+      <div class="bottleneck-title">Потеря исторических данных трафика</div>
+      <div class="bottleneck-body">
+        <div class="tag-stamp fact" style="margin-bottom:4px">ФАКТ.</div>
+        GitHub Traffic API хранит только 14 дней. 105-дневная история трафика утеряна. Невозможно ответить: "какой релиз дал всплеск?" или "какое YouTube-видео сработало?"
+        <div class="fact-source" style="margin-top:6px">[GitHub API → traffic/views, 14d limit]</div>
+      </div>
+    </div>
+
+    <div class="bottleneck-card med">
+      <div class="bottleneck-num">5</div>
+      <div class="bottleneck-title">Broken CHANGELOG links</div>
+      <div class="bottleneck-body">
+        <div class="tag-stamp fact" style="margin-bottom:4px">ФАКТ.</div>
+        CHANGELOG.md: ссылка [Unreleased] указывает на v1.11.0...HEAD, пропуская v1.12–v1.15. Ссылки для v1.12.0–v1.15.0 отсутствуют. Нарушает навигацию.
+        <div class="fact-source" style="margin-top:6px">[CHANGELOG.md:192-206]</div>
+      </div>
+    </div>
+
+    <div class="bottleneck-card med">
+      <div class="bottleneck-num">6</div>
+      <div class="bottleneck-title">paperclip-api без русской документации</div>
+      <div class="bottleneck-body">
+        <div class="tag-stamp fact" style="margin-bottom:4px">ФАКТ.</div>
+        Единственный скилл без README.ru.md. Все остальные 10 скиллов имеют билингвальную документацию. Нарушает собственное правило из CLAUDE.md.
+        <div class="fact-source" style="margin-top:6px">[ls skills/paperclip-api/ — нет README.ru.md]</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SECTION 7 -->
+<section id="s7">
+  <div class="section-number">07</div>
+  <div class="section-title">Контуры внедрения и отсутствующие артефакты</div>
+  <div class="section-intro">Что можно улучшить — автоматизация процессов и недостающие операционные документы.</div>
+
+  <h3>7a. Контуры автоматизации</h3>
+
+  <div class="contour-card">
+    <div class="contour-top">
+      <span class="contour-name">Снимок трафика каждые 12 часов</span>
+      <span class="contour-priority prio-high">ВЫСОКИЙ</span>
+    </div>
+    <div class="contour-why"><strong>Зачем:</strong> GitHub Traffic API хранит 14 дней — после этого данные теряются навсегда.</div>
+    <div class="contour-now"><strong>Сейчас:</strong> Ручные API-запросы ad hoc. 91 день истории уже потерян.</div>
+    <div class="contour-grid">
+      <div class="contour-col">
+        <h4>АВТОМАТИЗИРОВАТЬ</h4>
+        <ul>
+          <li>Cron-скрипт: gh api traffic/views, traffic/clones, referrers → append в JSON/CSV</li>
+          <li>Хранить в research/ или отдельном data-репо</li>
+        </ul>
+      </div>
+      <div class="contour-col">
+        <h4>ОСТАВИТЬ ЧЕЛОВЕКУ</h4>
+        <ul>
+          <li>Интерпретация: какое видео вызвало пик</li>
+          <li>Решение: менять контент-стратегию или нет</li>
+        </ul>
+      </div>
+    </div>
+    <div class="risk-bar">Риск: Перелог данных без анализа = шум, а не сигнал</div>
+  </div>
+
+  <div class="contour-card">
+    <div class="contour-top">
+      <span class="contour-name">Канал обратной связи</span>
+      <span class="contour-priority prio-crit">КРИТИЧНЫЙ</span>
+    </div>
+    <div class="contour-why"><strong>Зачем:</strong> 134 звезды при 0 issues = пользователи не знают куда писать или не чувствуют, что могут.</div>
+    <div class="contour-now"><strong>Сейчас:</strong> Нет issue templates, discussions отключены, README не приглашает к участию.</div>
+    <div class="contour-grid">
+      <div class="contour-col">
+        <h4>АВТОМАТИЗИРОВАТЬ</h4>
+        <ul>
+          <li>GitHub Issue templates (bug, feature request, skill idea)</li>
+          <li>Включить Discussions (Ideas + Q&A)</li>
+        </ul>
+      </div>
+      <div class="contour-col">
+        <h4>ОСТАВИТЬ ЧЕЛОВЕКУ</h4>
+        <ul>
+          <li>Ответы и приоритизация запросов</li>
+          <li>Решение: брать в работу или нет</li>
+        </ul>
+      </div>
+    </div>
+    <div class="risk-bar">Риск: Поток запросов без фильтра → ощущение обязанности отвечать</div>
+  </div>
+
+  <div class="contour-card">
+    <div class="contour-top">
+      <span class="contour-name">Очистка "Coming soon" секций</span>
+      <span class="contour-priority prio-high">ВЫСОКИЙ</span>
+    </div>
+    <div class="contour-why"><strong>Зачем:</strong> 3 пустых директории обещают контент 104 дня. Для нового посетителя — сигнал заброшенности.</div>
+    <div class="contour-now"><strong>Сейчас:</strong> hooks/, prompts/, workflows/ с README "Coming soon" ссылаются из основного README.</div>
+    <div class="contour-grid">
+      <div class="contour-col">
+        <h4>АВТОМАТИЗИРОВАТЬ</h4>
+        <ul>
+          <li>Удалить пустые директории или убрать из README</li>
+          <li>Добавить в roadmap только если есть план по дате</li>
+        </ul>
+      </div>
+      <div class="contour-col">
+        <h4>ОСТАВИТЬ ЧЕЛОВЕКУ</h4>
+        <ul>
+          <li>Решение: будут ли hooks/prompts/workflows вообще</li>
+        </ul>
+      </div>
+    </div>
+    <div class="risk-bar">Риск: Если удалить — теряется маркер будущего направления</div>
+  </div>
+
+  <h3>7b. Отсутствующие артефакты (чеклист 18 пунктов)</h3>
+
+  <p style="font-size:13px; color:var(--ink-light); margin-bottom:16px;">Проверено по 4 категориям. Контекст: ris-claude-code — open-source библиотека скиллов, не SaaS-продукт. Многие артефакты из категорий "Стратегия" и "Governance" имеют ограниченную применимость.</p>
+
+  <h3 style="color:var(--forest);">Категория 1: Стратегия и цели</h3>
+
+  <div class="artifact-missing">
+    <h4>1.1 North Star Metric — ОТСУТСТВУЕТ</h4>
+    <div class="af-row"><span class="af-label">Симптом:</span> Решения о скиллах принимаются на основе личных потребностей, не пользовательской ценности</div>
+    <div class="af-row"><span class="af-label">Риск:</span> Продукт расходится с потребностями аудитории</div>
+    <div class="af-row"><span class="af-label">Минимум:</span> "Наш NSM = weekly active skill users" (или clones, или stars/week)</div>
+    <div class="af-row"><span class="af-label">Приоритет:</span> Высокий | Тип: Видимость</div>
+  </div>
+
+  <div class="artifact-missing">
+    <h4>1.2 OMTM — ОТСУТСТВУЕТ</h4>
+    <div class="af-row"><span class="af-label">Симптом:</span> Одновременная работа над новыми скиллами, marketplace-интеграцией, документацией</div>
+    <div class="af-row"><span class="af-label">Минимум:</span> "OMTM этого цикла — unique cloners/week, цель — 50, дедлайн — 30.04.2026"</div>
+    <div class="af-row"><span class="af-label">Приоритет:</span> Средний | Тип: Согласованность</div>
+  </div>
+
+  <div class="artifact-present">
+    <h4>1.3 Quarterly OKR — НЕ ПРИМЕНИМО</h4>
+    <p>Это open-source side-project, не бизнес с квартальными целями.</p>
+  </div>
+
+  <div class="artifact-present">
+    <h4>1.4 Weekly check-in — ЧАСТИЧНО ЕСТЬ</h4>
+    <p>weekly-retro скилл существует в проекте, но применяется к бизнесу автора, не к этому репо.</p>
+  </div>
+
+  <h3 style="color:var(--forest);">Категория 2: AI-native артефакты</h3>
+
+  <div class="artifact-present">
+    <h4>2.1 CLAUDE.md — ЕСТЬ</h4>
+    <p>48 строк: структура, versioning, release checklist. Машиночитаемый. [CLAUDE.md]</p>
+  </div>
+
+  <div class="artifact-present">
+    <h4>2.2 Библиотека промптов — ЕСТЬ (по сути)</h4>
+    <p>skills/*/SKILL.md = библиотека промптов с версиями в git. 2 186 строк, 11 скиллов. Формат стандартизирован.</p>
+  </div>
+
+  <div class="artifact-missing">
+    <h4>2.3 Runbook для пайплайнов — ОТСУТСТВУЕТ</h4>
+    <div class="af-row"><span class="af-label">Симптом:</span> Release checklist есть в CLAUDE.md, но нет runbook для "что делать если release сломался"</div>
+    <div class="af-row"><span class="af-label">Минимум:</span> 5 строк: trigger → steps → failure → rollback → escalate</div>
+    <div class="af-row"><span class="af-label">Приоритет:</span> Средний | Тип: Контроль</div>
+  </div>
+
+  <div class="artifact-missing">
+    <h4>2.4 Список запрещённых действий — ОТСУТСТВУЕТ</h4>
+    <div class="af-row"><span class="af-label">Симптом:</span> В глобальном CLAUDE.md есть "Public Repo Protection", но в проектном CLAUDE.md нет секции запретов</div>
+    <div class="af-row"><span class="af-label">Риск:</span> Агент может случайно удалить скилл, сломать README, запушить без тега</div>
+    <div class="af-row"><span class="af-label">Минимум:</span> Секция "Never" в CLAUDE.md: 5-7 правил</div>
+    <div class="af-row"><span class="af-label">Приоритет:</span> Высокий | Тип: Контроль</div>
+  </div>
+
+  <div class="artifact-missing">
+    <h4>2.5 Eval-набор — ОТСУТСТВУЕТ</h4>
+    <div class="af-row"><span class="af-label">Симптом:</span> Скиллы тестируются вручную автором; обновление промпта → "кажется работает"</div>
+    <div class="af-row"><span class="af-label">Минимум:</span> 2-3 golden test cases для ключевых скиллов (product-data-audit, weekly-retro)</div>
+    <div class="af-row"><span class="af-label">Приоритет:</span> Средний | Тип: Контроль</div>
+  </div>
+
+  <h3 style="color:var(--forest);">Категория 3: Инфраструктура данных</h3>
+
+  <div class="artifact-missing">
+    <h4>3.1 SSOT — ОТСУТСТВУЕТ</h4>
+    <div class="af-row"><span class="af-label">Симптом:</span> Текущая версия в plugin.json, CHANGELOG.md и git tags — 3 источника. Нет явного "кто владеет числом"</div>
+    <div class="af-row"><span class="af-label">Минимум:</span> Одна строка в CLAUDE.md: "Version source of truth: git tags"</div>
+    <div class="af-row"><span class="af-label">Приоритет:</span> Средний | Тип: Согласованность</div>
+  </div>
+
+  <div class="artifact-present">
+    <h4>3.2–3.4 Метрики, свежесть, снимки — НЕ ПРИМЕНИМО</h4>
+    <p>У проекта нет бизнес-метрик, требующих определений. Единственная "метрика" = версия, она в git tags.</p>
+  </div>
+
+  <h3 style="color:var(--forest);">Категория 4: Governance</h3>
+
+  <div class="artifact-missing">
+    <h4>4.1 Журнал решений — ОТСУТСТВУЕТ</h4>
+    <div class="af-row"><span class="af-label">Симптом:</span> 7 скиллов удалены (v1.13) — причины в CHANGELOG, но не в структурированном формате. "Low value" — субъективно</div>
+    <div class="af-row"><span class="af-label">Минимум:</span> Секция в CHANGELOG или отдельный docs/decisions.md</div>
+    <div class="af-row"><span class="af-label">Приоритет:</span> Средний | Тип: Видимость</div>
+  </div>
+
+  <div class="artifact-present">
+    <h4>4.2 Матрица ответственности — НЕ ПРИМЕНИМО</h4>
+    <p>Solo-проект: автор = единственный owner всех доменов.</p>
+  </div>
+
+  <div class="artifact-present">
+    <h4>4.3 Правила эскалации — ЧАСТИЧНО ЕСТЬ</h4>
+    <p>Глобальный CLAUDE.md: "спрашивай перед крупными рефакторами и пушем". Достаточно для текущего масштаба.</p>
+  </div>
+
+  <div class="artifact-present">
+    <h4>4.4 Журнал инцидентов — НЕ ПРИМЕНИМО</h4>
+    <p>Open-source библиотека markdown-файлов. Инциденты крайне маловероятны.</p>
+  </div>
+
+  <p style="font-size:13px; color:var(--ink-light); margin-top:24px;">
+    <strong>Итого:</strong> 7 артефактов отсутствуют, 5 есть, 6 не применимы к проекту данного типа.
+  </p>
+</section>
+
+<!-- SECTION 8 -->
+<section id="s8">
+  <div class="section-number">08</div>
+  <div class="section-title">Приоритеты</div>
+  <div class="section-intro">Что делать первым, что потом, что позже. Три горизонта + план на 1 час если нужно начать прямо сейчас.</div>
+
+  <div class="timeline">
+    <div class="timeline-group">
+      <div class="timeline-label now" style="color:var(--forest);">СЕЙЧАС (1-2 недели)</div>
+      <div class="timeline-item">Починить ссылки в CHANGELOG.md (v1.12–v1.15 + Unreleased)</div>
+      <div class="timeline-item">Добавить README.ru.md для paperclip-api</div>
+      <div class="timeline-item">Удалить или скрыть 3 пустых "Coming soon" секции из README</div>
+      <div class="timeline-item">Включить GitHub Discussions (категории: Ideas, Q&A)</div>
+    </div>
+
+    <div class="timeline-group">
+      <div class="timeline-label next" style="color:var(--amber);">ПОТОМ (1-2 месяца)</div>
+      <div class="timeline-item">Создать Issue templates (bug, feature request, skill idea)</div>
+      <div class="timeline-item">Настроить cron-скрипт для сохранения Traffic API данных</div>
+      <div class="timeline-item">Добавить секцию "Never" в CLAUDE.md проекта</div>
+      <div class="timeline-item">Определить NSM: clones/week или active installations</div>
+    </div>
+
+    <div class="timeline-group">
+      <div class="timeline-label later" style="color:var(--ink-faint);">ПОЗЖЕ (квартал+)</div>
+      <div class="timeline-item">Golden test cases для 2-3 ключевых скиллов — если аудитория вырастет</div>
+      <div class="timeline-item">Structured decision log — если начнутся contributions</div>
+      <div class="timeline-item">Marketplace analytics — когда Claude Code покажет install data</div>
+    </div>
+  </div>
+
+  <div class="one-hour-box">
+    <ol>
+      <li><strong>Починить CHANGELOG ссылки</strong> — 5 строк, убирает технический долг [CHANGELOG.md:192]</li>
+      <li><strong>Удалить "Coming soon" из README</strong> — убирает сигнал заброшенности [README.md, README.ru.md]</li>
+      <li><strong>Включить Discussions</strong> — один клик в Settings → даёт канал обратной связи</li>
+      <li><strong>Добавить issue template "Skill idea"</strong> — .github/ISSUE_TEMPLATE/skill-idea.yml</li>
+      <li><strong>Написать 5 строк "Never" в CLAUDE.md</strong> — защита от случайных разрушений</li>
+    </ol>
+  </div>
+</section>
+
+<!-- SECTION 9 -->
+<section id="s9">
+  <div class="section-number">09</div>
+  <div class="section-title">Неизвестное</div>
+  <div class="section-intro">Честный список того, чего мы не знаем. Эти слепые пятна важнее фактов — они показывают где решения принимаются вслепую.</div>
+
+  <div class="unknown-item">
+    <div class="unknown-mark">?</div>
+    <div class="unknown-text"><strong>Сколько людей реально используют скиллы после клонирования?</strong> 201 уникальный клон за 14 дней, но post-install метрик нет. Может быть 5, может быть 150.</div>
+  </div>
+
+  <div class="unknown-item">
+    <div class="unknown-mark">?</div>
+    <div class="unknown-text"><strong>Какие скиллы самые популярные?</strong> Нет данных. Все решения о приоритизации основаны на личном ощущении автора.</div>
+  </div>
+
+  <div class="unknown-item">
+    <div class="unknown-mark">?</div>
+    <div class="unknown-text"><strong>Работает ли marketplace-установка?</strong> plugin.json есть, но нет подтверждения что кто-то установил через marketplace. Downloads на releases = 0.</div>
+  </div>
+
+  <div class="unknown-item">
+    <div class="unknown-mark">?</div>
+    <div class="unknown-text"><strong>Какова реальная конверсия YouTube → clone → use?</strong> YouTube = #1 источник (315 переходов), но связь "посмотрел видео → установил скилл → использует" не отслеживается.</div>
+  </div>
+
+  <div class="unknown-item">
+    <div class="unknown-mark">?</div>
+    <div class="unknown-text"><strong>Есть ли конкуренты с аналогичными skill-наборами?</strong> Позиция на marketplace не исследована. Может быть единственный, а может быть 10-й.</div>
+  </div>
+
+  <div class="unknown-item">
+    <div class="unknown-mark">?</div>
+    <div class="unknown-text"><strong>Как масштабируется Personal Corp Framework?</strong> Документация впечатляет, но нет кейсов использования другими людьми. Работает ли для кого-то кроме автора?</div>
+  </div>
+
+  <div class="unknown-item">
+    <div class="unknown-mark">?</div>
+    <div class="unknown-text"><strong>Какой % звёзд — реальные пользователи vs "поставил и забыл"?</strong> 134 stars при 0 issues — может означать что stars ≈ "bookmark", а не intent to use.</div>
+  </div>
+</section>
+
+<!-- SECTION 10 -->
+<section id="s10">
+  <div class="section-number">10</div>
+  <div class="section-title">Вопросы для следующего разговора</div>
+  <div class="section-intro">18 вопросов, которые стоит обсудить. Каждый нацелен на конкретное решение или снятие неизвестности.</div>
+
+  <div class="question-grid">
+    <div class="question-card">
+      <div class="question-num">01</div>
+      <div class="question-text">Это портфолио автора или продукт для пользователей? От ответа зависит нужны ли issues, discussions, analytics вообще.</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">02</div>
+      <div class="question-text">Какую метрику роста ты бы хотел видеть через 3 месяца? Stars/week, clones/week, active users?</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">03</div>
+      <div class="question-text">Hooks, prompts, workflows — есть ли план или можно убрать "Coming soon"?</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">04</div>
+      <div class="question-text">Кто-нибудь давал обратную связь по скиллам вне GitHub? (Telegram, YouTube комментарии, личные сообщения)</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">05</div>
+      <div class="question-text">Personal Corp Framework — хочешь ли ты чтобы другие его использовали? Если да — нужен onboarding guide.</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">06</div>
+      <div class="question-text">Marketplace-установка работает? Есть ли хоть один подтверждённый случай?</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">07</div>
+      <div class="question-text">Какое YouTube-видео дало больше всего переходов? Есть ли корреляция с пиками клонов (170 views 24 Mar, 274 views 26 Mar)?</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">08</div>
+      <div class="question-text">Стоит ли сохранять traffic-данные автоматически или это overengineering для open-source side-project?</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">09</div>
+      <div class="question-text">paperclip-api — это публичный референс или приватный инструмент? Нужен ли ему README.ru.md?</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">10</div>
+      <div class="question-text">7 удалённых скиллов в v1.13 — что триггернуло зачистку? Повторится ли это?</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">11</div>
+      <div class="question-text">product-data-audit — самый сложный скилл (4 reference-файла). Кто целевой пользователь кроме тебя?</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">12</div>
+      <div class="question-text">Есть ли скиллы которые ты используешь чаще всего? Это подсказка какие продвигать.</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">13</div>
+      <div class="question-text">Хочешь ли external contributions? CONTRIBUTING.md есть, но ни один PR не приходил.</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">14</div>
+      <div class="question-text">vibecoding.phd упомянут как ссылка в README. Есть ли конверсия GitHub → vibecoding.phd?</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">15</div>
+      <div class="question-text">Нужна ли секция "Never" в CLAUDE.md? Что агент НЕ должен делать в этом репо?</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">16</div>
+      <div class="question-text">GitHub Actions для CI — есть release.yml для changelog, но нет автотестов. Нужны ли они?</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">17</div>
+      <div class="question-text">Пик трафика 26 марта (274 views, 75 uniq) — что произошло? Релиз v1.13? YouTube-видео?</div>
+    </div>
+    <div class="question-card">
+      <div class="question-num">18</div>
+      <div class="question-text">Statusline — всё ещё актуален? macOS Keychain + bun зависимость — насколько это portable?</div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 11 -->
+<section id="s11">
+  <div class="section-number">11</div>
+  <div class="section-title">Приложение: источники и уровень уверенности</div>
+  <div class="section-intro">Откуда взяты данные и насколько им можно доверять. Прозрачность метода.</div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>Вывод</th><th>Источник</th><th>Цитата / число</th><th>Уверенность</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>134 звезды, 13 форков</td>
+          <td>GitHub API → repo</td>
+          <td>stargazerCount: 134, forkCount: 13</td>
+          <td>Высокий</td>
+        </tr>
+        <tr>
+          <td>1 449 views / 292 uniq за 14 дней</td>
+          <td>GitHub API → traffic/views</td>
+          <td>count: 1449, uniques: 292</td>
+          <td>Высокий</td>
+        </tr>
+        <tr>
+          <td>604 clones / 201 uniq за 14 дней</td>
+          <td>GitHub API → traffic/clones</td>
+          <td>count: 604, uniques: 201</td>
+          <td>Высокий</td>
+        </tr>
+        <tr>
+          <td>YouTube = #1 referrer</td>
+          <td>GitHub API → referrers</td>
+          <td>youtube.com: 315/62</td>
+          <td>Высокий</td>
+        </tr>
+        <tr>
+          <td>0 issues, 0 PRs</td>
+          <td>gh issue list, gh pr list</td>
+          <td>Пустой вывод</td>
+          <td>Высокий</td>
+        </tr>
+        <tr>
+          <td>11 скиллов, 2 186 строк</td>
+          <td>ls skills/, wc -l SKILL.md</td>
+          <td>Прямой подсчёт</td>
+          <td>Высокий</td>
+        </tr>
+        <tr>
+          <td>15 релизов за 105 дней</td>
+          <td>git tag, CHANGELOG.md</td>
+          <td>v1.0.0 (15.12.2025) – v1.15.0 (29.03.2026)</td>
+          <td>Высокий</td>
+        </tr>
+        <tr>
+          <td>3 пустых секции 104 дня</td>
+          <td>ls hooks/, git log hooks/</td>
+          <td>Coming soon c 15.12.2025</td>
+          <td>Высокий</td>
+        </tr>
+        <tr>
+          <td>Marketplace-установки неизвестны</td>
+          <td>.claude-plugin/, releases</td>
+          <td>downloads=0 на всех releases</td>
+          <td>Средне-высокий</td>
+        </tr>
+        <tr>
+          <td>CHANGELOG ссылки сломаны</td>
+          <td>CHANGELOG.md:192-206</td>
+          <td>[Unreleased] → v1.11.0, нет v1.12-v1.15</td>
+          <td>Высокий</td>
+        </tr>
+        <tr>
+          <td>paperclip-api без README.ru.md</td>
+          <td>ls skills/paperclip-api/</td>
+          <td>Только README.md</td>
+          <td>Высокий</td>
+        </tr>
+        <tr>
+          <td>Post-install использование неизвестно</td>
+          <td>Нет источника</td>
+          <td>—</td>
+          <td>Низкий (слепое пятно)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div><!-- container -->
+
+<script>
+// IntersectionObserver for active nav
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('nav a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navLinks.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-80px 0px -60% 0px', threshold: 0 });
+sections.forEach(s => observer.observe(s));
+
+// Scroll reveal
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.05 });
+sections.forEach(s => revealObserver.observe(s));
+
+// Make hero/methodology/toc visible immediately
+document.querySelectorAll('.hero, .methodology, .toc').forEach(el => el.style.opacity = 1);
+</script>
+
+</body>
+</html>
