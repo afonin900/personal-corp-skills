@@ -19,6 +19,7 @@ A collection of customizations, scripts, and workflows for [Claude Code](https:/
 | [cc-analytics](./skills/cc-analytics/) | HTML reports of Claude Code usage statistics |
 | [ceo-council](./skills/ceo-council/) | Parallel sub-agents as C-level experts for strategic analysis |
 | [claude-md-writer](./skills/claude-md-writer/) | Create and refactor CLAUDE.md files following best practices |
+| [corp-new](./skills/corp-new/) | Add a private corp-* department repo and HQ entry after approval |
 | [design-minimal](./skills/design-minimal/) | Standalone minimal HTML pages for dashboards, briefs, handouts, and reports |
 | [gh-issues](./skills/gh-issues/) | Manage GitHub Issues via CLI with session context |
 | [meeting-copilot](./skills/meeting-copilot/) | Live meeting dashboard: prepare, update from transcript chunks, close with decisions and follow-ups |
@@ -59,6 +60,7 @@ graph LR
 | Skill | What it does |
 |-------|-------------|
 | [project-init](./skills/project-init/) | Guided interview → GitHub Project + labels + CLAUDE.md config |
+| [corp-new](./skills/corp-new/) | Register a private corp-* department repo and HQ entry after approval |
 | [task-routing](./skills/task-routing/) | Route issues to the correct repo using routing config |
 | [weekly-planning](./skills/weekly-planning/) | Retro findings + backlog → prioritized outcomes with Eisenhower matrix |
 | [weekly-retro](./skills/weekly-retro/) | Structured retrospective: gather data, interview founder, capture findings |

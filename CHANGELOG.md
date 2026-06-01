@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.19.0] - 2026-06-01
+
+### Added
+- **corp-new** skill — create or verify a private `corp-*` department repository and register it in an HQ Markdown file
+  - Resolves configurable GitHub owner, workspace root, HQ file, repo prefix, and department identity
+  - Adds preflight, dry-run summary, safe sync, and HQ row verification gates
+  - Preserves existing folders and dirty worktrees; avoids force pushes, resets, deletions, and archive edits
+  - Includes bilingual docs (README.md + README.ru.md) and public-safe placeholders
+
 ## [1.18.0] - 2026-06-01
 
 ### Added
@@ -234,7 +243,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Custom statusline with cost tracking, context usage, git branch
 - Basic repository structure
 
-[Unreleased]: https://github.com/serejaris/ris-claude-code/compare/v1.18.0...HEAD
+[Unreleased]: https://github.com/serejaris/ris-claude-code/compare/v1.19.0...HEAD
+[1.19.0]: https://github.com/serejaris/ris-claude-code/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/serejaris/ris-claude-code/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/serejaris/ris-claude-code/compare/v1.15.1...v1.17.0
 [1.16.0]: https://github.com/serejaris/ris-claude-code/compare/v1.15.1...485a46c
