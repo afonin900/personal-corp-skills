@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **idea** skill — fast capture of a single voiced idea into a provenance-tracked folder (one folder per idea) with semantic dedup against an index and an optional GitHub Project mirror; bilingual READMEs.
 
+## [2.1.0] - 2026-06-15
+
+### Changed
+- **manager** skill — major update porting the evolved canonical issues-and-Projects workflow, kept generalized and config-driven:
+  - Iron invariants expanded from 3 to 6 — added **Project placement**, **Project-visible parent** (visible root epic in the Project view with a non-empty status lane), and a mandatory **work-record comment** on real session work.
+  - New **GitHub Projects integration** config block and a **Project status sync (write mode)** section (set touched issues to `In progress`, surface Project drift).
+  - **Title convention replaced**: domain prefixes (`product:`, `ops:` …) removed; new formula `{object} — {action} ({when})` with type metadata living in labels / parent-tree / Projects; old prefixed titles accepted as legacy aliases. The `Issue title domains` config concept is retired.
+  - Added **batched GraphQL** for cross-repo search (3+ keys, REST rate-limit avoidance) and live Project-state reads, with null-guards and partial-error handling; `--limit 1000` Project snapshots; parallel `gh` reads in pre-flight.
+  - Added **commit↔issue linkage** (`refs`/`closes` trailer + short SHAs in `## Updates`), **Definition of Done** (verifiable body), **aggregate parent** classification with a parent-type taxonomy, strict **Related** body-section rules with live-verify, W-label fast-path, dated-issue W-label, and a **task drift guard** in pre-flight.
+  - READMEs (EN + RU) and the SKILL.md frontmatter description updated to match the expanded invariants and capabilities.
+
 ## [2.0.0] - 2026-06-06
 
 ### Added

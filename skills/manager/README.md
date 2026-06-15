@@ -11,7 +11,7 @@ One skill, two modes:
 - **Write mode (sync)** — at end of session: reads what was done, finds matching issues, updates bodies / adds labels, creates new ones only when nothing matches.
 - **Read mode (query)** — anytime: «what about track X?», «is there an issue for Y?» → cross-repo search, condensed table of matches with labels, status, last activity.
 
-GitHub Issues become your single source of truth for tasks. The skill enforces three invariants per issue: parent epic (via Sub-issues API), W-label (if enabled), and a predictable title formula.
+GitHub Issues become your single source of truth for tasks; a GitHub Project board is the source of truth for what's active. The skill enforces a set of invariants per issue (parent epic via Sub-issues API, W-label, Project placement, work-record comment on real work) and a predictable no-prefix title formula.
 
 ## Why you'd want it
 
@@ -62,7 +62,7 @@ Add a `## Manager Config` section to your project's `CLAUDE.md`. Minimal config:
 | Repos to scan | List of repos to search for issues |
 | Tasks index file (optional) | Path to your current-week priorities file (e.g. `tasks.md`) — read FIRST before any `gh search` |
 | Domain → repo routing | Map task domains to repos (which type of issue lands where) |
-| Issue title domains | Closed list used in the title formula (`product`, `partner`, `crm`, ...) |
+| GitHub Projects integration | Your weekly Project board + status field/option — Project placement is an invariant |
 | W-label convention (optional) | Whether to use weekly labels (`W18`, `W19`...) |
 | Standing write authorization | `ask-each-time` (default) or `execute-after-plan` |
 | CRM integration (optional) | Path to your CRM and pointer format used in issue bodies |
@@ -110,13 +110,16 @@ The skill:
 4. Cross-references your priorities index
 5. Returns the table + health check + drift signals
 
-## Iron rules
+## Iron invariants
 
-The skill enforces three invariants for every issue it touches:
+The skill enforces invariants for every issue it touches — the base three always, plus the Project and work-record invariants for active / current-week issues:
 
 1. **W-label** (if convention enabled in config) — current or future week. Label missing in the repo? It creates it.
 2. **Parent epic** — exactly one parent via GitHub Sub-issues API. If no epic exists for the track — surfaces this in the plan, never creates an orphan.
 3. **Track differentiation via title + epic membership** — no track-labels (`<track-slug>`, `<client>-deal`). The track is recognized by title text and which epic the issue belongs to.
+4. **Project placement** — an active issue must be on its domain Project board and the global weekly Project; a W-label without Project placement is flagged as drift.
+5. **Project-visible parent** — for an active child, the visible root epic must itself be in the Project view with a non-empty status lane (not just an API `parent_issue_url`).
+6. **Work-record comment** — when real work happened in the session, a mandatory timeline comment summarizing it + commit links. A status/label/Project change does not replace it.
 
 ## See also
 

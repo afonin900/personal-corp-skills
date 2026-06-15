@@ -11,7 +11,7 @@
 - **Write mode (синк)** — в конце сессии: читает что было сделано, находит подходящие issues, обновляет тела/добавляет лейблы, создаёт новые только если нет совпадений.
 - **Read mode (запрос)** — в любое время: «что по треку X?», «есть ли issue по Y?» → поиск по всем твоим репозиториям, сводная таблица с лейблами, статусом, активностью.
 
-GitHub Issues — это твоя единственная правда по задачам. Скилл следит, чтобы каждый issue имел parent epic (через GitHub Sub-issues API), W-label (если включено в конфиге) и человекочитаемый title по формуле.
+GitHub Issues — это твоя единственная правда по задачам; GitHub Project-доска — правда о том, что сейчас в работе. Скилл следит за набором инвариантов на issue (parent epic через Sub-issues API, W-label, Project placement, work-record комментарий при реальной работе) и за человекочитаемым title по формуле без префикса.
 
 ## Зачем нужно
 
@@ -62,7 +62,7 @@ cp -r skills/manager ~/.claude/skills/
 | Repos to scan | Список репозиториев, в которых искать issues |
 | Tasks index file (опц.) | Путь к файлу с приоритетами текущей недели (например `tasks.md`) — скилл читает его FIRST до любого `gh search` |
 | Domain → repo routing | Маппинг доменов задач на репозитории (куда какой тип issue) |
-| Issue title domains | Закрытый список доменов для формулы title (`product`, `partner`, `crm`, ...) |
+| GitHub Projects integration | Твоя weekly Project-доска + status-поле/опция — Project placement это инвариант |
 | W-label convention (опц.) | Включить ли еженедельные лейблы (`W18`, `W19`...) |
 | Standing write authorization | `ask-each-time` (по умолчанию) или `execute-after-plan` |
 | CRM integration (опц.) | Путь к CRM и формат указателя в body issue |
@@ -110,13 +110,16 @@ cp -r skills/manager ~/.claude/skills/
 4. Cross-reference с твоим индексом приоритетов
 5. Возвращает таблицу + health-check + drift signals
 
-## Железные правила
+## Железные инварианты
 
-Скилл сам соблюдает три инварианта для каждого issue, который он трогает:
+Скилл соблюдает инварианты для каждого issue, который трогает — базовые три всегда, плюс Project и work-record для активных / current-week issue:
 
 1. **W-label** (если convention включён в конфиге) — текущая или future-week. Лейбла нет в репо? Создаст.
 2. **Parent epic** — ровно один parent через GitHub Sub-issues API. Если epic'а для трека нет — поднимет в плане, не создаст orphan.
 3. **Track differentiation через title + epic membership** — никаких track-labels (`<track-slug>`, `<client>-deal`). Различение трека = текст title + чей это child.
+4. **Project placement** — активный issue должен быть на доменной Project-доске и в глобальном weekly Project; W-label без Project placement = drift.
+5. **Project-visible parent** — для активного child видимый root epic сам должен быть в Project view с непустой status lane (не только API `parent_issue_url`).
+6. **Work-record комментарий** — при реальной работе в сессии обязательный timeline-комментарий с резюме + ссылками на коммиты. Смена status/label/Project его не заменяет.
 
 ## См. также
 
