@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **idea** skill — fast capture of a single voiced idea into a provenance-tracked folder (one folder per idea) with semantic dedup against an index and an optional GitHub Project mirror; bilingual READMEs.
+
 ## [2.0.0] - 2026-06-06
 
 ### Added

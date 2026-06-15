@@ -68,6 +68,7 @@ Use Personal Corp skills to plan my week.
 | [meeting-copilot](./skills/meeting-copilot/) | Live dashboard для встреч: подготовка, обновление из транскрипта, закрытие с решениями и follow-up |
 | [readme-generator](./skills/readme-generator/) | Человеко-ориентированные README с правильной структурой |
 | [manager](./skills/manager/) | Двусторонний мост между текущей сессией и GitHub Issues |
+| [idea](./skills/idea/) | Захват одной озвученной идеи в папку-с-провенансом, дедуп по индексу, опциональное зеркало в GitHub Project |
 | [pm-prioritize](./skills/pm-prioritize/) | Ранжирование бэклогов через RICE, ICE, MoSCoW или Kano |
 | [pm-prd](./skills/pm-prd/) | Генерация структурированного PRD с шаблонами под тип продукта |
 | [pm-user-stories](./skills/pm-user-stories/) | Разбивка Epic на User Stories с INVEST и Story Map |

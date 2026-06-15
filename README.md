@@ -70,6 +70,7 @@ Replace `cc-analytics` with any skill name from the table below.
 | [meeting-copilot](./skills/meeting-copilot/) | Live meeting dashboard: prepare, update from transcript chunks, close with decisions and follow-ups |
 | [readme-generator](./skills/readme-generator/) | Human-focused README files with proper structure |
 | [manager](./skills/manager/) | Bidirectional bridge between the current session and GitHub Issues |
+| [idea](./skills/idea/) | Capture one voiced idea into a provenance-tracked folder, dedup against an index, optional GitHub Project mirror |
 | [pm-prioritize](./skills/pm-prioritize/) | Rank backlogs with RICE, ICE, MoSCoW, or Kano and produce a decision log |
 | [pm-prd](./skills/pm-prd/) | Structured PRD generation with product-type templates and quality checklist |
 | [pm-user-stories](./skills/pm-user-stories/) | Break Epics into INVEST-validated User Stories with Story Map output |
