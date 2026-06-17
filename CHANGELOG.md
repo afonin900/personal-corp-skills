@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **idea** skill — fast capture of a single voiced idea into a provenance-tracked folder (one folder per idea) with semantic dedup against an index and an optional GitHub Project mirror; bilingual READMEs.
 
+## [2.1.1] - 2026-06-17
+
+### Fixed
+- **manager** skill — eliminate recurring `gh` command failures on clean runs:
+  - GraphQL examples now pipe into a separate `jq` (`... | jq -r '(.data // {}) | ...'`) instead of the `--jq` flag. Root cause: when a GraphQL response carries an `errors` array (one failed alias or a fully broken query), `gh api graphql` ignores `--jq` and dumps the raw body, so the `(.data // {})` guard never ran and downstream parsing hit `KeyError: 'data'`. The pipe form runs the guard on the raw body — live aliases print, a total failure yields empty output with no crash.
+  - Issue search no longer hardcodes `--state open` / `state:open` (which silently dropped closed issues). To cover both states, omit the state qualifier — one call / one alias returns open and closed together; `--state all` is documented as invalid.
+  - Added the missing `(.labels.nodes // [])` null-guard to the canonical Project-evidence jq.
+
 ## [2.1.0] - 2026-06-15
 
 ### Changed
