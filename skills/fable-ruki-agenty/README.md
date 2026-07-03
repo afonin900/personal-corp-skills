@@ -1,6 +1,6 @@
 # Fable Ruki-Agenty (Fable Hands-Agents)
 
-A manually-invoked orchestration mode for Claude Fable 5 under tight usage limits: Fable never writes or reads code itself. It writes complete, self-sufficient specs into GitHub issue bodies and dispatches ready tasks to cheaper subagents — Sonnet for coding and analysis, Haiku for reading and checks.
+A manually-invoked orchestration mode for Claude Fable 5 under tight usage limits: Fable never writes or reads code itself. It writes complete, self-sufficient specs into GitHub issue bodies and dispatches ready tasks to hands: coding and code review go to Codex (GPT 5.5, openai-codex plugin) or to external worker terminals via Orca, scouting and verification to Sonnet subagents.
 
 ## Core rules
 
